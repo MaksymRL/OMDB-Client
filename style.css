@@ -66,6 +66,21 @@ header p {
     border-color: #1a2a6c;
 }
 
+#yearInput {
+    width: 120px;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
+    border-left: none;
+    border-right: none;
+    font-size: 1rem;
+    transition: border-color 0.3s;
+}
+
+#yearInput:focus {
+    outline: none;
+    border-color: #1a2a6c;
+}
+
 #searchButton {
     padding: 12px 25px;
     background-color: #1a2a6c;
@@ -199,6 +214,14 @@ footer a:hover {
     #searchInput {
         border-radius: 5px;
         margin-bottom: 10px;
+        border: 2px solid #ddd;
+    }
+    
+    #yearInput {
+        border-radius: 5px;
+        margin-bottom: 10px;
+        border: 2px solid #ddd;
+        width: 100%;
     }
     
     #searchButton {

@@ -1,7 +1,10 @@
+// Configurazione
 const API_KEY = '145e3197'; // Sostituisci con la tua API Key di OMDb
 const BASE_URL = 'https://www.omdbapi.com/';
 
+// Elementi DOM
 const searchInput = document.getElementById('searchInput');
+const yearInput = document.getElementById('yearInput');
 const searchButton = document.getElementById('searchButton');
 const searchTerm = document.getElementById('searchTerm');
 const resultCount = document.getElementById('resultCount');
@@ -14,17 +17,25 @@ function toggleLoading(show) {
 }
 
 // Funzione per visualizzare i film
-function displayMovies(movies, query) {
+function displayMovies(movies, query, year) {
     resultsContainer.innerHTML = '';
     
     if (!movies || movies.length === 0) {
-        resultsContainer.innerHTML = '<div class="message">Nessun risultato trovato per "' + query + '"</div>';
+        let message = `Nessun risultato trovato per "${query}"`;
+        if (year) {
+            message += ` nell'anno ${year}`;
+        }
+        resultsContainer.innerHTML = `<div class="message">${message}</div>`;
         resultCount.textContent = '';
         return;
     }
     
     // Aggiorna informazioni sulla ricerca
-    searchTerm.textContent = `Risultati per: "${query}"`;
+    let searchInfo = `Risultati per: "${query}"`;
+    if (year) {
+        searchInfo += ` (anno: ${year})`;
+    }
+    searchTerm.textContent = searchInfo;
     resultCount.textContent = `${movies.length} film trovati`;
     
     // Crea le card per ogni film
@@ -51,12 +62,25 @@ function displayError(message) {
     resultCount.textContent = '';
 }
 
+// Funzione per validare l'anno
+function isValidYear(year) {
+    if (!year) return true; // Campo vuoto è valido (opzionale)
+    const yearNum = parseInt(year);
+    return !isNaN(yearNum) && yearNum >= 1900 && yearNum <= 2030;
+}
+
 // Funzione principale di ricerca
 async function searchMovies() {
     const query = searchInput.value.trim();
+    const year = yearInput.value.trim();
     
     if (!query) {
         displayError('Inserisci un termine di ricerca');
+        return;
+    }
+    
+    if (!isValidYear(year)) {
+        displayError('Inserisci un anno valido (tra 1900 e 2030)');
         return;
     }
     
@@ -64,8 +88,13 @@ async function searchMovies() {
     toggleLoading(true);
     
     try {
-        // Effettua la chiamata API
-        const response = await fetch(`${BASE_URL}?apikey=${API_KEY}&s=${encodeURIComponent(query)}`);
+        // Costruisce l'URL con i parametri
+        let url = `${BASE_URL}?apikey=${API_KEY}&s=${encodeURIComponent(query)}`;
+        if (year) {
+            url += `&y=${year}`;
+        }
+        
+        const response = await fetch(url);
         
         if (!response.ok) {
             throw new Error('Errore nella richiesta API');
@@ -76,7 +105,7 @@ async function searchMovies() {
         if (data.Response === 'True') {
             // Prendi solo i primi 10 risultati
             const movies = data.Search.slice(0, 10);
-            displayMovies(movies, query);
+            displayMovies(movies, query, year);
         } else {
             displayError(data.Error || 'Nessun risultato trovato');
         }
@@ -98,10 +127,20 @@ searchInput.addEventListener('keypress', (e) => {
     }
 });
 
+yearInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        searchMovies();
+    }
+});
+
 // Inizializzazione
 document.addEventListener('DOMContentLoaded', () => {
     // Focus sulla barra di ricerca al caricamento della pagina
     searchInput.focus();
+    
+    // Imposta l'anno corrente come placeholder
+    const currentYear = new Date().getFullYear();
+    yearInput.placeholder = `Anno (opzionale) - es: ${currentYear}`;
     
     // Messaggio iniziale
     resultsContainer.innerHTML = '<div class="message">Inserisci un termine di ricerca per iniziare</div>';
