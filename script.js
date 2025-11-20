@@ -19,6 +19,8 @@ const prevPageBtn = document.getElementById('prevPage');
 const nextPageBtn = document.getElementById('nextPage');
 const lastPageBtn = document.getElementById('lastPage');
 const pageNumbers = document.getElementById('pageNumbers');
+const jumpToPageInput = document.getElementById('jumpToPage');
+const jumpButton = document.getElementById('jumpButton');
 
 // Variabili globali per la paginazione
 let currentPage = 1;
@@ -115,6 +117,9 @@ function updatePagination(currentPage) {
     
     // Mostra la paginazione se ci sono più pagine
     togglePagination(totalPages > 1);
+    
+    // Aggiorna il placeholder del campo di salto
+    jumpToPageInput.placeholder = `1-${totalPages}`;
 }
 
 // Funzione per aggiornare i numeri di pagina
@@ -150,8 +155,36 @@ function updatePageNumbers(currentPage, totalPages) {
 
 // Funzione per andare a una pagina specifica
 function goToPage(page) {
+    // Validazione: se il numero è minore o uguale a 0, va alla prima pagina
+    if (page <= 0) {
+        page = 1;
+    }
+    
+    // Validazione: se il numero è superiore al totale delle pagine, va all'ultima
+    if (page > totalPages) {
+        page = totalPages;
+    }
+    
     currentPage = page;
     performSearch(currentQuery, currentYear, currentSearchType, page);
+}
+
+// Funzione per gestire il salto a una pagina specifica
+function handleJumpToPage() {
+    const pageInput = parseInt(jumpToPageInput.value);
+    
+    if (isNaN(pageInput)) {
+        // Se non è un numero, mostra un avviso e resetta il campo
+        alert('Inserisci un numero di pagina valido');
+        jumpToPageInput.value = '';
+        return;
+    }
+    
+    // Vai alla pagina specificata (con validazione incorporata in goToPage)
+    goToPage(pageInput);
+    
+    // Resetta il campo di input
+    jumpToPageInput.value = '';
 }
 
 // Funzione per gestire gli errori
@@ -290,6 +323,14 @@ firstPageBtn.addEventListener('click', () => goToPage(1));
 prevPageBtn.addEventListener('click', () => goToPage(currentPage - 1));
 nextPageBtn.addEventListener('click', () => goToPage(currentPage + 1));
 lastPageBtn.addEventListener('click', () => goToPage(totalPages));
+
+// Salto a pagina specifica
+jumpButton.addEventListener('click', handleJumpToPage);
+jumpToPageInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        handleJumpToPage();
+    }
+});
 
 // Aggiorna l'UI quando cambia il tipo di ricerca
 searchTypeRadios.forEach(radio => {

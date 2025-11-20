@@ -199,6 +199,7 @@ header p {
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+    margin-bottom: 15px;
 }
 
 .pagination-btn {
@@ -242,6 +243,42 @@ header p {
     background-color: #1a2a6c;
     color: white;
     border-color: #1a2a6c;
+}
+
+/* Salto a pagina specifica */
+.pagination-jump {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.pagination-jump span {
+    font-weight: bold;
+    color: #1a2a6c;
+}
+
+#jumpToPage {
+    width: 70px;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#jumpButton {
+    padding: 8px 15px;
+    background-color: #1a2a6c;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#jumpButton:hover {
+    background-color: #0d1a4d;
 }
 
 /* Footer */
@@ -329,5 +366,10 @@ footer a:hover {
     .page-numbers {
         order: -1;
         justify-content: center;
+    }
+    
+    .pagination-jump {
+        flex-direction: column;
+        gap: 10px;
     }
 }
