@@ -10,14 +10,22 @@
     <div class="container">
         <header>
             <h1>Cerca Film</h1>
-            <p>Inserisci una parola chiave per trovare i film correlati</p>
+            <p>Cerca film per titolo, anno, o solo per anno</p>
         </header>
         
         <div class="search-container">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Inserisci il titolo del film...">
-                <input type="number" id="yearInput" placeholder="Anno (opzionale)" min="1900" max="2030">
+                <input type="text" id="searchInput" placeholder="Titolo del film (opzionale per ricerca solo anno)">
+                <input type="number" id="yearInput" placeholder="Anno (obbligatorio per ricerca solo anno)" min="1900" max="2030">
                 <button id="searchButton">Cerca</button>
+            </div>
+            <div class="search-options">
+                <label>
+                    <input type="radio" name="searchType" value="title" checked> Cerca per titolo
+                </label>
+                <label>
+                    <input type="radio" name="searchType" value="year"> Cerca solo per anno
+                </label>
             </div>
             <div class="search-info">
                 <span id="searchTerm"></span>
@@ -32,8 +40,22 @@
         
         <div id="results" class="results-container"></div>
         
+        <div id="pagination" class="pagination hidden">
+            <div class="pagination-info">
+                <span id="pageInfo">Pagina 1 di 1</span>
+            </div>
+            <div class="pagination-controls">
+                <button id="firstPage" class="pagination-btn">Prima</button>
+                <button id="prevPage" class="pagination-btn">Precedente</button>
+                <div id="pageNumbers" class="page-numbers"></div>
+                <button id="nextPage" class="pagination-btn">Successiva</button>
+                <button id="lastPage" class="pagination-btn">Ultima</button>
+            </div>
+        </div>
+        
         <footer>
             <p>Dati forniti da <a href="https://www.omdbapi.com/" target="_blank">OMDb API</a></p>
+            <p class="note">Nota: La ricerca solo per anno utilizza un termine generico per trovare film</p>
         </footer>
     </div>
 

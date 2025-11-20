@@ -1,6 +1,7 @@
 // Configurazione
 const API_KEY = '145e3197'; // Sostituisci con la tua API Key di OMDb
 const BASE_URL = 'https://www.omdbapi.com/';
+const RESULTS_PER_PAGE = 10;
 
 // Elementi DOM
 const searchInput = document.getElementById('searchInput');
@@ -10,33 +11,69 @@ const searchTerm = document.getElementById('searchTerm');
 const resultCount = document.getElementById('resultCount');
 const loading = document.getElementById('loading');
 const resultsContainer = document.getElementById('results');
+const searchTypeRadios = document.getElementsByName('searchType');
+const pagination = document.getElementById('pagination');
+const pageInfo = document.getElementById('pageInfo');
+const firstPageBtn = document.getElementById('firstPage');
+const prevPageBtn = document.getElementById('prevPage');
+const nextPageBtn = document.getElementById('nextPage');
+const lastPageBtn = document.getElementById('lastPage');
+const pageNumbers = document.getElementById('pageNumbers');
+
+// Variabili globali per la paginazione
+let currentPage = 1;
+let totalResults = 0;
+let totalPages = 0;
+let currentQuery = '';
+let currentYear = '';
+let currentSearchType = 'title';
 
 // Funzione per mostrare/nascondere il caricamento
 function toggleLoading(show) {
     loading.classList.toggle('hidden', !show);
 }
 
+// Funzione per mostrare/nascondere la paginazione
+function togglePagination(show) {
+    pagination.classList.toggle('hidden', !show);
+}
+
+// Funzione per calcolare il numero totale di pagine
+function calculateTotalPages(totalResults) {
+    return Math.ceil(totalResults / RESULTS_PER_PAGE);
+}
+
 // Funzione per visualizzare i film
-function displayMovies(movies, query, year) {
+function displayMovies(movies, query, year, searchType, page = 1) {
     resultsContainer.innerHTML = '';
     
     if (!movies || movies.length === 0) {
-        let message = `Nessun risultato trovato per "${query}"`;
-        if (year) {
-            message += ` nell'anno ${year}`;
+        let message = 'Nessun risultato trovato';
+        if (searchType === 'year') {
+            message += ` per l'anno ${year}`;
+        } else if (query && year) {
+            message += ` per "${query}" nell'anno ${year}`;
+        } else if (query) {
+            message += ` per "${query}"`;
         }
         resultsContainer.innerHTML = `<div class="message">${message}</div>`;
         resultCount.textContent = '';
+        togglePagination(false);
         return;
     }
     
     // Aggiorna informazioni sulla ricerca
-    let searchInfo = `Risultati per: "${query}"`;
-    if (year) {
-        searchInfo += ` (anno: ${year})`;
+    let searchInfo = '';
+    if (searchType === 'year') {
+        searchInfo = `Film dell'anno: ${year}`;
+    } else if (query && year) {
+        searchInfo = `Risultati per: "${query}" (anno: ${year})`;
+    } else if (query) {
+        searchInfo = `Risultati per: "${query}"`;
     }
+    
     searchTerm.textContent = searchInfo;
-    resultCount.textContent = `${movies.length} film trovati`;
+    resultCount.textContent = `${totalResults} film trovati`;
     
     // Crea le card per ogni film
     movies.forEach(movie => {
@@ -54,44 +91,111 @@ function displayMovies(movies, query, year) {
         
         resultsContainer.appendChild(movieElement);
     });
+    
+    // Aggiorna la paginazione
+    updatePagination(page);
+}
+
+// Funzione per aggiornare i controlli di paginazione
+function updatePagination(currentPage) {
+    // Calcola il numero totale di pagine
+    totalPages = calculateTotalPages(totalResults);
+    
+    // Aggiorna le informazioni sulla pagina
+    pageInfo.textContent = `Pagina ${currentPage} di ${totalPages}`;
+    
+    // Abilita/disabilita i pulsanti
+    firstPageBtn.disabled = currentPage === 1;
+    prevPageBtn.disabled = currentPage === 1;
+    nextPageBtn.disabled = currentPage === totalPages;
+    lastPageBtn.disabled = currentPage === totalPages;
+    
+    // Aggiorna i numeri di pagina
+    updatePageNumbers(currentPage, totalPages);
+    
+    // Mostra la paginazione se ci sono più pagine
+    togglePagination(totalPages > 1);
+}
+
+// Funzione per aggiornare i numeri di pagina
+function updatePageNumbers(currentPage, totalPages) {
+    pageNumbers.innerHTML = '';
+    
+    // Calcola l'intervallo di pagine da mostrare
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, currentPage + 2);
+    
+    // Aggiusta l'intervallo se siamo vicini agli estremi
+    if (currentPage <= 3) {
+        endPage = Math.min(5, totalPages);
+    }
+    
+    if (currentPage >= totalPages - 2) {
+        startPage = Math.max(1, totalPages - 4);
+    }
+    
+    // Aggiunge i numeri di pagina
+    for (let i = startPage; i <= endPage; i++) {
+        const pageNumber = document.createElement('div');
+        pageNumber.className = `page-number ${i === currentPage ? 'active' : ''}`;
+        pageNumber.textContent = i;
+        pageNumber.addEventListener('click', () => {
+            if (i !== currentPage) {
+                goToPage(i);
+            }
+        });
+        pageNumbers.appendChild(pageNumber);
+    }
+}
+
+// Funzione per andare a una pagina specifica
+function goToPage(page) {
+    currentPage = page;
+    performSearch(currentQuery, currentYear, currentSearchType, page);
 }
 
 // Funzione per gestire gli errori
 function displayError(message) {
     resultsContainer.innerHTML = `<div class="message">${message}</div>`;
     resultCount.textContent = '';
+    togglePagination(false);
 }
 
 // Funzione per validare l'anno
 function isValidYear(year) {
-    if (!year) return true; // Campo vuoto è valido (opzionale)
+    if (!year) return false;
     const yearNum = parseInt(year);
     return !isNaN(yearNum) && yearNum >= 1900 && yearNum <= 2030;
 }
 
+// Funzione per ottenere il tipo di ricerca selezionato
+function getSearchType() {
+    for (const radio of searchTypeRadios) {
+        if (radio.checked) {
+            return radio.value;
+        }
+    }
+    return 'title';
+}
+
 // Funzione principale di ricerca
-async function searchMovies() {
-    const query = searchInput.value.trim();
-    const year = yearInput.value.trim();
-    
-    if (!query) {
-        displayError('Inserisci un termine di ricerca');
-        return;
-    }
-    
-    if (!isValidYear(year)) {
-        displayError('Inserisci un anno valido (tra 1900 e 2030)');
-        return;
-    }
-    
+async function performSearch(query, year, searchType, page = 1) {
     // Mostra il caricamento
     toggleLoading(true);
     
     try {
-        // Costruisce l'URL con i parametri
-        let url = `${BASE_URL}?apikey=${API_KEY}&s=${encodeURIComponent(query)}`;
-        if (year) {
-            url += `&y=${year}`;
+        // Costruisce l'URL con i parametri appropriati
+        let url = `${BASE_URL}?apikey=${API_KEY}&page=${page}`;
+        
+        if (searchType === 'year') {
+            // Per ricerca solo anno, usiamo un termine di ricerca generico
+            url += `&s=movie&y=${year}`;
+        } else {
+            // Ricerca normale per titolo
+            url += `&s=${encodeURIComponent(query)}`;
+            if (year) {
+                url += `&y=${year}`;
+            }
         }
         
         const response = await fetch(url);
@@ -103,11 +207,20 @@ async function searchMovies() {
         const data = await response.json();
         
         if (data.Response === 'True') {
-            // Prendi solo i primi 10 risultati
-            const movies = data.Search.slice(0, 10);
-            displayMovies(movies, query, year);
+            // Aggiorna le variabili globali
+            currentQuery = query;
+            currentYear = year;
+            currentSearchType = searchType;
+            totalResults = parseInt(data.totalResults);
+            
+            // Visualizza i film
+            displayMovies(data.Search, query, year, searchType, page);
         } else {
-            displayError(data.Error || 'Nessun risultato trovato');
+            if (searchType === 'year') {
+                displayError(`Nessun film trovato per l'anno ${year}`);
+            } else {
+                displayError(data.Error || 'Nessun risultato trovato');
+            }
         }
     } catch (error) {
         console.error('Errore:', error);
@@ -115,6 +228,45 @@ async function searchMovies() {
     } finally {
         // Nascondi il caricamento
         toggleLoading(false);
+    }
+}
+
+// Funzione per gestire la ricerca (chiamata dal pulsante)
+function searchMovies() {
+    const query = searchInput.value.trim();
+    const year = yearInput.value.trim();
+    const searchType = getSearchType();
+    
+    // Validazione
+    if (searchType === 'year' && !isValidYear(year)) {
+        displayError('Per la ricerca solo per anno, inserisci un anno valido (tra 1900 e 2030)');
+        return;
+    }
+    
+    if (searchType === 'title' && !query) {
+        displayError('Inserisci un termine di ricerca');
+        return;
+    }
+    
+    // Reimposta alla prima pagina
+    currentPage = 1;
+    
+    // Esegui la ricerca
+    performSearch(query, year, searchType, currentPage);
+}
+
+// Aggiorna l'interfaccia in base al tipo di ricerca selezionato
+function updateSearchUI() {
+    const searchType = getSearchType();
+    
+    if (searchType === 'year') {
+        searchInput.placeholder = "Titolo del film (opzionale)";
+        yearInput.placeholder = "Anno (obbligatorio)";
+        searchInput.disabled = false;
+    } else {
+        searchInput.placeholder = "Titolo del film (obbligatorio)";
+        yearInput.placeholder = "Anno (opzionale)";
+        searchInput.disabled = false;
     }
 }
 
@@ -133,6 +285,17 @@ yearInput.addEventListener('keypress', (e) => {
     }
 });
 
+// Pulsanti di paginazione
+firstPageBtn.addEventListener('click', () => goToPage(1));
+prevPageBtn.addEventListener('click', () => goToPage(currentPage - 1));
+nextPageBtn.addEventListener('click', () => goToPage(currentPage + 1));
+lastPageBtn.addEventListener('click', () => goToPage(totalPages));
+
+// Aggiorna l'UI quando cambia il tipo di ricerca
+searchTypeRadios.forEach(radio => {
+    radio.addEventListener('change', updateSearchUI);
+});
+
 // Inizializzazione
 document.addEventListener('DOMContentLoaded', () => {
     // Focus sulla barra di ricerca al caricamento della pagina
@@ -143,5 +306,8 @@ document.addEventListener('DOMContentLoaded', () => {
     yearInput.placeholder = `Anno (opzionale) - es: ${currentYear}`;
     
     // Messaggio iniziale
-    resultsContainer.innerHTML = '<div class="message">Inserisci un termine di ricerca per iniziare</div>';
+    resultsContainer.innerHTML = '<div class="message">Seleziona il tipo di ricerca e inserisci i parametri richiesti</div>';
+    
+    // Inizializza l'UI
+    updateSearchUI();
 });
