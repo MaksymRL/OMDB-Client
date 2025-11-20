@@ -3,110 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cerca Film</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .search-container {
-            margin-bottom: 20px;
-        }
-        
-        input[type="text"] {
-            padding: 10px;
-            width: 300px;
-            margin-right: 10px;
-        }
-        
-        button {
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .movie {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin: 10px 0;
-            display: flex;
-        }
-        
-        .movie-poster {
-            width: 100px;
-            margin-right: 15px;
-        }
-        
-        .movie-info {
-            flex-grow: 1;
-        }
-    </style>
+    <title>Cerca Film - OMDb API</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="search-container">
-        <h1>Cerca Film</h1>
-        <input type="text" id="searchInput" placeholder="Inserisci il titolo del film...">
-        <button onclick="searchMovies()">Cerca</button>
+    <div class="container">
+        <header>
+            <h1>Cerca Film</h1>
+            <p>Inserisci una parola chiave per trovare i film correlati</p>
+        </header>
+        
+        <div class="search-container">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Inserisci il titolo del film...">
+                <button id="searchButton">Cerca</button>
+            </div>
+            <div class="search-info">
+                <span id="searchTerm"></span>
+                <span id="resultCount"></span>
+            </div>
+        </div>
+        
+        <div id="loading" class="hidden">
+            <div class="spinner"></div>
+            <p>Ricerca in corso...</p>
+        </div>
+        
+        <div id="results" class="results-container"></div>
+        
+        <footer>
+            <p>Dati forniti da <a href="https://www.omdbapi.com/" target="_blank">OMDb API</a></p>
+        </footer>
     </div>
-    <div id="results"></div>
 
-    <script>
-        async function searchMovies() {
-            const searchTerm = document.getElementById('searchInput').value;
-            const resultsContainer = document.getElementById('results');
-            resultsContainer.innerHTML = 'Caricamento...';
-
-            try {
-                // Sostituisci con la tua API key di OMDb
-                const API_KEY = '145e3197';
-                const response = await fetch(
-                    `https://www.omdbapi.com/?apikey=${API_KEY}&s=${encodeURIComponent(searchTerm)}`
-                );
-                const data = await response.json();
-
-                if (data.Response === 'True') {
-                    // Prendi solo i primi 10 risultati
-                    const movies = data.Search.slice(0, 10);
-                    displayMovies(movies);
-                } else {
-                    resultsContainer.innerHTML = 'Nessun risultato trovato';
-                }
-            } catch (error) {
-                resultsContainer.innerHTML = 'Errore nella ricerca';
-                console.error('Errore:', error);
-            }
-        }
-
-        function displayMovies(movies) {
-            const resultsContainer = document.getElementById('results');
-            resultsContainer.innerHTML = '';
-
-            movies.forEach(movie => {
-                const movieElement = document.createElement('div');
-                movieElement.className = 'movie';
-                movieElement.innerHTML = `
-                    <img class="movie-poster" src="${movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/100x150?text=No+Image'}" alt="Locandina">
-                    <div class="movie-info">
-                        <h3>${movie.Title}</h3>
-                        <p>Anno: ${movie.Year}</p>
-                        <p>Tipo: ${movie.Type}</p>
-                    </div>
-                `;
-                resultsContainer.appendChild(movieElement);
-            });
-        }
-
-        // Aggiungi ricerca tramite Enter
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                searchMovies();
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
