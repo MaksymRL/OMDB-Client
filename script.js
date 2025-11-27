@@ -11,7 +11,6 @@ const searchTerm = document.getElementById('searchTerm');
 const resultCount = document.getElementById('resultCount');
 const loading = document.getElementById('loading');
 const resultsContainer = document.getElementById('results');
-const searchTypeRadios = document.getElementsByName('searchType');
 const pagination = document.getElementById('pagination');
 const pageInfo = document.getElementById('pageInfo');
 const firstPageBtn = document.getElementById('firstPage');
@@ -28,7 +27,6 @@ let totalResults = 0;
 let totalPages = 0;
 let currentQuery = '';
 let currentYear = '';
-let currentSearchType = 'title';
 
 // Funzione per mostrare/nascondere il caricamento
 function toggleLoading(show) {
@@ -46,17 +44,17 @@ function calculateTotalPages(totalResults) {
 }
 
 // Funzione per visualizzare i film
-function displayMovies(movies, query, year, searchType, page = 1) {
+function displayMovies(movies, query, year, page = 1) {
     resultsContainer.innerHTML = '';
     
     if (!movies || movies.length === 0) {
         let message = 'Nessun risultato trovato';
-        if (searchType === 'year') {
-            message += ` per l'anno ${year}`;
-        } else if (query && year) {
-            message += ` per "${query}" nell'anno ${year}`;
+        if (query && year) {
+            message = `Nessun risultato trovato per "${query}" nell'anno ${year}`;
         } else if (query) {
-            message += ` per "${query}"`;
+            message = `Nessun risultato trovato per "${query}"`;
+        } else if (year) {
+            message = `Nessun film trovato per l'anno ${year}`;
         }
         resultsContainer.innerHTML = `<div class="message">${message}</div>`;
         resultCount.textContent = '';
@@ -66,12 +64,12 @@ function displayMovies(movies, query, year, searchType, page = 1) {
     
     // Aggiorna informazioni sulla ricerca
     let searchInfo = '';
-    if (searchType === 'year') {
-        searchInfo = `Film dell'anno: ${year}`;
-    } else if (query && year) {
+    if (query && year) {
         searchInfo = `Risultati per: "${query}" (anno: ${year})`;
     } else if (query) {
         searchInfo = `Risultati per: "${query}"`;
+    } else if (year) {
+        searchInfo = `Film dell'anno: ${year}`;
     }
     
     searchTerm.textContent = searchInfo;
@@ -166,7 +164,7 @@ function goToPage(page) {
     }
     
     currentPage = page;
-    performSearch(currentQuery, currentYear, currentSearchType, page);
+    performSearch(currentQuery, currentYear, page);
 }
 
 // Funzione per gestire il salto a una pagina specifica
@@ -196,23 +194,13 @@ function displayError(message) {
 
 // Funzione per validare l'anno
 function isValidYear(year) {
-    if (!year) return false;
+    if (!year) return true; // Anno opzionale
     const yearNum = parseInt(year);
     return !isNaN(yearNum) && yearNum >= 1900 && yearNum <= 2030;
 }
 
-// Funzione per ottenere il tipo di ricerca selezionato
-function getSearchType() {
-    for (const radio of searchTypeRadios) {
-        if (radio.checked) {
-            return radio.value;
-        }
-    }
-    return 'title';
-}
-
 // Funzione principale di ricerca
-async function performSearch(query, year, searchType, page = 1) {
+async function performSearch(query, year, page = 1) {
     // Mostra il caricamento
     toggleLoading(true);
     
@@ -220,15 +208,16 @@ async function performSearch(query, year, searchType, page = 1) {
         // Costruisce l'URL con i parametri appropriati
         let url = `${BASE_URL}?apikey=${API_KEY}&page=${page}`;
         
-        if (searchType === 'year') {
-            // Per ricerca solo anno, usiamo un termine di ricerca generico
-            url += `&s=movie&y=${year}`;
-        } else {
-            // Ricerca normale per titolo
+        // Determina il tipo di ricerca in base ai parametri inseriti
+        if (query && year) {
+            // Ricerca per titolo e anno
+            url += `&s=${encodeURIComponent(query)}&y=${year}`;
+        } else if (query) {
+            // Ricerca solo per titolo
             url += `&s=${encodeURIComponent(query)}`;
-            if (year) {
-                url += `&y=${year}`;
-            }
+        } else if (year) {
+            // Ricerca solo per anno (usa un termine generico)
+            url += `&s=movie&y=${year}`;
         }
         
         const response = await fetch(url);
@@ -243,16 +232,19 @@ async function performSearch(query, year, searchType, page = 1) {
             // Aggiorna le variabili globali
             currentQuery = query;
             currentYear = year;
-            currentSearchType = searchType;
             totalResults = parseInt(data.totalResults);
             
             // Visualizza i film
-            displayMovies(data.Search, query, year, searchType, page);
+            displayMovies(data.Search, query, year, page);
         } else {
-            if (searchType === 'year') {
+            if (query && year) {
+                displayError(`Nessun risultato trovato per "${query}" nell'anno ${year}`);
+            } else if (query) {
+                displayError(`Nessun risultato trovato per "${query}"`);
+            } else if (year) {
                 displayError(`Nessun film trovato per l'anno ${year}`);
             } else {
-                displayError(data.Error || 'Nessun risultato trovato');
+                displayError('Nessun risultato trovato');
             }
         }
     } catch (error) {
@@ -268,16 +260,15 @@ async function performSearch(query, year, searchType, page = 1) {
 function searchMovies() {
     const query = searchInput.value.trim();
     const year = yearInput.value.trim();
-    const searchType = getSearchType();
     
     // Validazione
-    if (searchType === 'year' && !isValidYear(year)) {
-        displayError('Per la ricerca solo per anno, inserisci un anno valido (tra 1900 e 2030)');
+    if (!query && !year) {
+        displayError('Inserisci almeno un termine di ricerca (titolo o anno)');
         return;
     }
     
-    if (searchType === 'title' && !query) {
-        displayError('Inserisci un termine di ricerca');
+    if (year && !isValidYear(year)) {
+        displayError('Inserisci un anno valido (tra 1900 e 2030)');
         return;
     }
     
@@ -285,22 +276,7 @@ function searchMovies() {
     currentPage = 1;
     
     // Esegui la ricerca
-    performSearch(query, year, searchType, currentPage);
-}
-
-// Aggiorna l'interfaccia in base al tipo di ricerca selezionato
-function updateSearchUI() {
-    const searchType = getSearchType();
-    
-    if (searchType === 'year') {
-        searchInput.placeholder = "Titolo del film (opzionale)";
-        yearInput.placeholder = "Anno (obbligatorio)";
-        searchInput.disabled = false;
-    } else {
-        searchInput.placeholder = "Titolo del film (obbligatorio)";
-        yearInput.placeholder = "Anno (opzionale)";
-        searchInput.disabled = false;
-    }
+    performSearch(query, year, currentPage);
 }
 
 // Event Listeners
@@ -332,11 +308,6 @@ jumpToPageInput.addEventListener('keypress', (e) => {
     }
 });
 
-// Aggiorna l'UI quando cambia il tipo di ricerca
-searchTypeRadios.forEach(radio => {
-    radio.addEventListener('change', updateSearchUI);
-});
-
 // Inizializzazione
 document.addEventListener('DOMContentLoaded', () => {
     // Focus sulla barra di ricerca al caricamento della pagina
@@ -347,8 +318,5 @@ document.addEventListener('DOMContentLoaded', () => {
     yearInput.placeholder = `Anno (opzionale) - es: ${currentYear}`;
     
     // Messaggio iniziale
-    resultsContainer.innerHTML = '<div class="message">Seleziona il tipo di ricerca e inserisci i parametri richiesti</div>';
-    
-    // Inizializza l'UI
-    updateSearchUI();
+    resultsContainer.innerHTML = '<div class="message">Inserisci titolo, anno o entrambi per effettuare la ricerca</div>';
 });

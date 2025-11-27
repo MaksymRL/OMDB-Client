@@ -10,22 +10,14 @@
     <div class="container">
         <header>
             <h1>Cerca Film</h1>
-            <p>Cerca film per titolo, anno, o solo per anno</p>
+            <p>Cerca film per titolo, anno, o entrambi</p>
         </header>
         
         <div class="search-container">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Titolo del film (opzionale per ricerca solo anno)">
-                <input type="number" id="yearInput" placeholder="Anno (obbligatorio per ricerca solo anno)" min="1900" max="2030">
+                <input type="text" id="searchInput" placeholder="Titolo del film (opzionale)">
+                <input type="number" id="yearInput" placeholder="Anno (opzionale)" min="1900" max="2030">
                 <button id="searchButton">Cerca</button>
-            </div>
-            <div class="search-options">
-                <label>
-                    <input type="radio" name="searchType" value="title" checked> Cerca per titolo
-                </label>
-                <label>
-                    <input type="radio" name="searchType" value="year"> Cerca solo per anno
-                </label>
             </div>
             <div class="search-info">
                 <span id="searchTerm"></span>
@@ -60,7 +52,7 @@
         
         <footer>
             <p>Dati forniti da <a href="https://www.omdbapi.com/" target="_blank">OMDb API</a></p>
-            <p class="note">Nota: La ricerca solo per anno utilizza un termine generico per trovare film</p>
+            <p class="note">Inserisci titolo, anno o entrambi per effettuare la ricerca</p>
         </footer>
     </div>
 

@@ -97,10 +97,7 @@ header p {
 }
 
 .search-options {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 15px;
-    justify-content: center;
+    display: none; /* Nascondi completamente la sezione dei radio button */
 }
 
 .search-options label {
