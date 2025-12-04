@@ -96,17 +96,6 @@ header p {
     background-color: #0d1a4d;
 }
 
-.search-options {
-    display: none; /* Nascondi completamente la sezione dei radio button */
-}
-
-.search-options label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-}
-
 .search-info {
     display: flex;
     justify-content: space-between;
@@ -149,6 +138,7 @@ header p {
     overflow: hidden;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
 }
 
 .movie:hover {
@@ -278,6 +268,152 @@ header p {
     background-color: #0d1a4d;
 }
 
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 10px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+    color: #1a2a6c;
+    background: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    transition: all 0.3s;
+}
+
+.close-modal:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+/* Stili per i dettagli del film */
+.movie-details {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 30px;
+    padding: 30px;
+}
+
+.movie-details-poster {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+.movie-details-info h2 {
+    color: #1a2a6c;
+    margin-bottom: 15px;
+    font-size: 1.8rem;
+}
+
+.movie-details-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.meta-label {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 600;
+}
+
+.meta-value {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.movie-details-plot {
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.movie-details-cast {
+    margin-bottom: 20px;
+}
+
+.movie-details-ratings {
+    margin-top: 20px;
+}
+
+.ratings-container {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.rating-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    min-width: 80px;
+}
+
+.rating-source {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.rating-value {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #1a2a6c;
+}
+
 /* Footer */
 footer {
     text-align: center;
@@ -345,12 +481,6 @@ footer a:hover {
         border-radius: 5px;
     }
     
-    .search-options {
-        flex-direction: column;
-        gap: 10px;
-        align-items: center;
-    }
-    
     .results-container {
         grid-template-columns: 1fr;
     }
@@ -368,5 +498,20 @@ footer a:hover {
     .pagination-jump {
         flex-direction: column;
         gap: 10px;
+    }
+    
+    /* Responsive per la modal */
+    .movie-details {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+    
+    .movie-details-poster {
+        max-width: 250px;
+        margin: 0 auto;
+    }
+    
+    .ratings-container {
+        flex-wrap: wrap;
     }
 }
